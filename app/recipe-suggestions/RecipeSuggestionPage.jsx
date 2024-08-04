@@ -28,7 +28,6 @@ const RecipeSuggestionPage = () => {
 
     fetchInventory();
   }, []);
-  console.log('Generating recipe with inventory:', inventory);
 
   const parseRecipe = (recipeString) => {
     const lines = recipeString.split('\n');
@@ -52,7 +51,7 @@ const RecipeSuggestionPage = () => {
   const generateRecipe = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/llama3.1', {
+      const response = await fetch('../api/llama3.1', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -67,9 +66,10 @@ const RecipeSuggestionPage = () => {
   
       const data = await response.json();
       const parsedRecipe = parseRecipe(data.choices[0].message.content);
+      console.log(parsedRecipe);
       setSuggestedRecipe(parsedRecipe);
     } catch (error) {
-      console.error('Error generating recipe:', error);
+      console.error('Error generating recipe:', error.message);
       // Display error message to the user
       // For example: setErrorMessage(error.message);
     } finally {

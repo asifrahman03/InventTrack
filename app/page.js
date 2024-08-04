@@ -6,7 +6,6 @@ import { useSearchParams } from 'next/navigation';
 import { firestore } from "@/firebase";
 import { collection, query, getDocs, doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { SidebarDemo } from "./_components/SidebarM.jsx";
 
 const style = {
   position: 'absolute',
@@ -102,7 +101,6 @@ export default function Home() {
     }
   }, [searchParams]);
   return (
-    <SidebarDemo>
     <Box sx={{ bgcolor: '#f0f5ff', minHeight: '100vh', width: '100vw', padding: 4, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
       <Typography variant="h2" textAlign="center" mb={4} color={'#4575f3'} fontWeight={"bold"}>InventTrack</Typography>
       <Search />
@@ -206,6 +204,5 @@ export default function Home() {
           </Box>
         </Modal>
       </Box>
-      </SidebarDemo>
   );
 }

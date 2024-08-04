@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import theme from './theme';
+import { SidebarDemo } from './_components/SidebarM';
 import './globals.css';
 
 export default function RootLayout({ children }) {
@@ -19,7 +20,9 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <SidebarDemo>{children}</SidebarDemo>
+      </body>
     </html>
   );
 }
