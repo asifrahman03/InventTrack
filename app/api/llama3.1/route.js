@@ -2,8 +2,9 @@ import Groq from 'groq-sdk';
 
 const groq = new Groq({ apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY, dangerouslyAllowBrowser: true });
 
+
 export async function POST(request) {
-  const { items } = request.json(); // Parse the JSON body
+  const { items } = await request.json(); // Parse the JSON body
 
   try {
     const response = await groq.chat.completions.create({
@@ -21,7 +22,8 @@ export async function POST(request) {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: 'Failed to fetch data from AI' }), { 
+    console.error('Error fetching data from AI:', error); // Log the error
+    return new Response(JSON.stringify({ error: 'Failed to fetch data from AI', details: error.message }), { 
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
