@@ -9,9 +9,27 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@emotion/react": "^11.13.0",
+    "@emotion/styled": "^11.13.0",
+    "@heroicons/react": "^2.1.5",
+    "@mui/icons-material": "^5.16.6",
+    "@mui/material": "^5.16.6",
+    "@tabler/icons-react": "^3.11.0",
+    "autoprefixer": "^10.4.20",
+    "dotenv": "^16.4.5",
+    "find-config": "^1.0.0",
+    "firebase": "^10.12.4",
+    "framer-motion": "^11.3.21",
+    "groq-sdk": "^0.5.0",
+    "lucide-react": "^0.424.0",
+    "next": "14.2.5",
+    "postcss": "^8.4.40",
     "react": "^18",
     "react-dom": "^18",
-    "next": "14.2.5"
+    "replicate": "^0.32.0",
+    "tailwind-merge": "^2.4.0",
+    "tailwindcss": "^3.4.7",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "eslint": "^8",
