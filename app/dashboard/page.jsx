@@ -114,7 +114,7 @@ export default function Home() {
       <Typography variant="h2" textAlign="center" mb={4} color={'#4575f3'} fontWeight={"bold"}>InventTrack</Typography>
       <Search />
       {searchParams.get('query') && (<Typography variant="body2" sx={{ mb: 2 }}>
-        Showing results for: "{searchParams.get('query')}"
+        Showing results for: &quot;{searchParams.get('query')}&quot;
         </Typography>
       )}
       <Grid container spacing={4} justifyContent="center" sx={{ maxWidth: '1200px', width: '100%' }}>
