@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { firestore } from "@/firebase";
 import { collection, query, getDocs, doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
+import { SidebarDemo } from './_components/SidebarM.jsx';
 
 const style = {
   position: 'absolute',
@@ -13,13 +14,14 @@ const style = {
   left: '50%',
   transform: 'translate(-50%, -50%)',
   width: 400,
-  bgcolor: '#f0f5ff',
+  background: 'linear-gradient(to right, #e6f0ff, #b3d9ff)',
   border: '2px solid #000',
   borderRadius: '16px',
   boxShadow: 24,
   p: 4,
   overflow: 'hidden',
 };
+
 
 export default function Home() {
   const searchParams = useSearchParams();
@@ -101,7 +103,14 @@ export default function Home() {
     }
   }, [searchParams]);
   return (
-    <Box sx={{ bgcolor: '#f0f5ff', minHeight: '100vh', width: '100vw', padding: 4, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+    <SidebarDemo>
+    <Box sx={{background: 'linear-gradient(to right, #e6f0ff, #b3d9ff)', 
+      minHeight: '100vh', 
+      width: '100vw', 
+      padding: 4, 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center'}}>
       <Typography variant="h2" textAlign="center" mb={4} color={'#4575f3'} fontWeight={"bold"}>InventTrack</Typography>
       <Search />
       {searchParams.get('query') && (<Typography variant="body2" sx={{ mb: 2 }}>
@@ -114,7 +123,12 @@ export default function Home() {
           <Button 
             variant="contained" 
             onClick={handleOpen}
-            sx={{ width: '200px', height: '50px' }}  // Fixed size for the button
+            sx={{width: '200px', 
+              height: '50px',
+              backgroundColor: '#4575f3',
+              '&:hover': {
+                backgroundColor: '#3a63cc',
+              }}}  // Fixed size for the button
           >
             Add Item
           </Button>
@@ -130,7 +144,8 @@ export default function Home() {
             overflowY: "auto",
             border: '1px solid ',
             borderRadius: '16px',
-            padding: 2
+            padding: 2,
+            backgroundColor: 'white'
           }}>
             {inventory.map((item) => (
               <Paper 
@@ -204,5 +219,6 @@ export default function Home() {
           </Box>
         </Modal>
       </Box>
+      </SidebarDemo>
   );
 }

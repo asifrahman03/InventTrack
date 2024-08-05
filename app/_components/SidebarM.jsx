@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar.jsx";
 import {
   IconArrowLeft,
@@ -10,8 +10,31 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/firebase";
+import { useRouter } from "next/navigation";
+import { signOut } from "firebase/auth";
 
 export function SidebarDemo({children}) {
+  const [user, loading] = useAuthState(auth);
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/sign-up");
+    }
+  }, [user, loading, router]);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      router.push("/sign-up");
+    } catch (error) {
+      console.error("Error signing out: ", error);
+    }
+  };
+
   const links = [
     {
       label: "Dashboard",
@@ -29,18 +52,27 @@ export function SidebarDemo({children}) {
     },
     {
       label: "Logout",
-      href: "#",
+      href: "#", // Add a fallback href
+      onClick: handleSignOut,
       icon: (
         <IconArrowLeft className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
     },
   ];
-  const [open, setOpen] = useState(false);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return null; // Or a loading spinner
+  }
+
   return (
     <div
       className={cn(
         "rounded-md flex flex-col md:flex-row bg-gray-100 dark:bg-neutral-800 w-full flex-1 max-w-100% mx-auto border border-neutral-200 dark:border-neutral-700 overflow-hidden",
-        "h-screen" // for your use case, use `h-screen` instead of `h-[60vh]`
+        "h-screen"
       )}
     >
       <Sidebar open={open} setOpen={setOpen}>
@@ -48,21 +80,28 @@ export function SidebarDemo({children}) {
           <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
             {open ? <Logo /> : <LogoIcon />}
             <div className="mt-8 flex flex-col gap-2">
-              {links.map((link, idx) => (
-                <Link key={idx} href={link.href} passHref>
-                  <SidebarLink link={link} />
-                </Link>
-              ))}
+            {links.map((link, idx) => (
+              <Link key={idx} 
+              href={link.href || "#"} 
+              passHref 
+              onClick={link.onClick ? (e) => {
+                e.preventDefault();
+                link.onClick();
+              } : undefined}
+            >
+              <SidebarLink link={link} />
+              </Link>
+            ))}
             </div>
           </div>
           <div>
             <SidebarLink
               link={{
-                label: "Manu Arora",
+                label: user.displayName || user.email,
                 href: "#",
                 icon: (
                   <Image
-                    src="https://assets.aceternity.com/manu.png"
+                    src="/userPfp.jpeg"
                     className="h-7 w-7 flex-shrink-0 rounded-full"
                     width={50}
                     height={50}
@@ -78,6 +117,8 @@ export function SidebarDemo({children}) {
     </div>
   );
 }
+
+// ... (Logo and LogoIcon components remain unchanged)
 
 export const Logo = () => {
   return (

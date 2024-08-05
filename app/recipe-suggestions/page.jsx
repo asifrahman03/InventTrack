@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { firestore } from '@/firebase'; // Make sure this path is correct
 import Button from '@/components/ui/button';
+import { SidebarDemo } from '../_components/SidebarM';
 
 const RecipeSuggestionPage = () => {
   const [inventory, setInventory] = useState([]);
@@ -26,6 +27,7 @@ const RecipeSuggestionPage = () => {
 
     fetchInventory();
   }, []);
+  console.log("Ingredients: ", inventory);
 
   const parseRecipe = (recipeString) => {
     const lines = recipeString.split('\n');
@@ -81,6 +83,7 @@ const RecipeSuggestionPage = () => {
   };
 
   return (
+    <SidebarDemo>
     <div className="min-h-screen w-full flex flex-col items-center bg-gradient-to-r from-blue-100 to-blue-300 p-6 overflow-auto">
       <h1 className="text-5xl font-bold text-center text-blue-900 mb-8">RecipeTrack</h1>
       
@@ -121,6 +124,7 @@ const RecipeSuggestionPage = () => {
         </div>
       )}
     </div>
+    </SidebarDemo>
   );
 };
 
