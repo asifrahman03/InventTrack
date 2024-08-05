@@ -14,11 +14,27 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
+import { doc, getDoc } from 'firebase/firestore';
+import { firestore } from '@/firebase';
 
 export function SidebarDemo({children}) {
   const [user, loading] = useAuthState(auth);
+  const [userData, setUserData] = useState(null);
   const router = useRouter();
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!loading && user) {
+      const fetchUserData = async () => {
+        const docRef = doc(firestore, 'users', user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setUserData(docSnap.data());
+        }
+      };
+      fetchUserData();
+    }
+  }, [user, loading]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -38,7 +54,7 @@ export function SidebarDemo({children}) {
   const links = [
     {
       label: "Dashboard",
-      href: "/",
+      href: "/dashboard",
       icon: (
         <IconBrandTabler className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
@@ -94,22 +110,17 @@ export function SidebarDemo({children}) {
             ))}
             </div>
           </div>
-          <div>
-            <SidebarLink
-              link={{
-                label: user.displayName || user.email,
-                href: "#",
-                icon: (
-                  <Image
-                    src="/userPfp.jpeg"
-                    className="h-7 w-7 flex-shrink-0 rounded-full"
-                    width={50}
-                    height={50}
-                    alt="Avatar"
-                  />
-                ),
-              }}
+          <div className="flex items-center gap-2 p-4">
+            <Image
+              src="/userPfp.jpeg"
+              className="h-7 w-7 flex-shrink-0 rounded-full"
+              width={50}
+              height={50}
+              alt="Avatar"
             />
+            {open && (
+              <span className="text-black">{userData ? `${userData.firstName} ${userData.lastName}` : user.email}</span>
+            )}
           </div>
         </SidebarBody>
       </Sidebar>
@@ -154,5 +165,3 @@ export const LogoIcon = () => {
     </Link>
   );
 };
-
-

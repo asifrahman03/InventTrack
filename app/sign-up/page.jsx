@@ -2,7 +2,10 @@
 import React, { useState } from 'react';
 import { useCreateUserWithEmailAndPassword } from 'react-firebase-hooks/auth';
 import { auth } from '@/firebase';
-import Link from 'next/link'; // Add this import
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { doc, setDoc } from 'firebase/firestore';
+import { firestore } from '@/firebase';
 
 const SignUpForm = () => {
   const [formData, setFormData] = useState({
@@ -15,6 +18,8 @@ const SignUpForm = () => {
   const [error, setError] = useState(null);
 
   const [createUserWithEmailAndPassword, user, loading, userError] = useCreateUserWithEmailAndPassword(auth);
+
+  const router = useRouter();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -31,6 +36,11 @@ const SignUpForm = () => {
       const res = await createUserWithEmailAndPassword(formData.email, formData.password);
       if (res) {
         console.log('User created:', res.user);
+        await setDoc(doc(firestore, 'users', res.user.uid), {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+        });
         setFormData({
           firstName: '',
           lastName: '',
@@ -56,6 +66,7 @@ const SignUpForm = () => {
           <h2 className="text-2xl font-bold mb-4 text-blue-800">Thank You!</h2>
           <p className="text-gray-600">Your account has been created successfully.</p>
         </div>
+        {router.push('/dashboard')}
       </div>
     );
   }
@@ -76,7 +87,7 @@ const SignUpForm = () => {
               value={formData.firstName}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 bg-gray-50 px-3 py-2"
             />
           </div>
           <div className="mb-4">
@@ -88,7 +99,7 @@ const SignUpForm = () => {
               value={formData.lastName}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 bg-gray-50 px-3 py-2"
             />
           </div>
           <div className="mb-4">
@@ -100,7 +111,7 @@ const SignUpForm = () => {
               value={formData.email}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 bg-gray-50 px-3 py-2"
             />
           </div>
           <div className="mb-6">
@@ -112,7 +123,7 @@ const SignUpForm = () => {
               value={formData.password}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 bg-gray-50 px-3 py-2"
             />
           </div>
           <button
@@ -122,7 +133,6 @@ const SignUpForm = () => {
             Sign Up
           </button>
         </form>
-        {/* Add the new button/link here */}
         <div className="mt-4 text-center">
           <Link href="/sign-in" className="text-blue-600 hover:text-blue-800 transition duration-200">
             <button className="w-full bg-gray-200 text-blue-600 py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-200">

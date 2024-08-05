@@ -54,7 +54,7 @@ const SignInForm = () => {
         <div className="bg-white p-8 rounded-lg shadow-md w-96 text-center">
           <h2 className="text-2xl font-bold mb-4 text-blue-800">Welcome Back!</h2>
           <p className="text-gray-600">You have successfully signed in.</p>
-          {router.push('/')}
+          {router.push('/dashboard')}
         </div>
       </div>
     );
@@ -76,7 +76,7 @@ const SignInForm = () => {
               value={formData.email}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 bg-gray-50 px-3 py-2"
             />
           </div>
           <div className="mb-6">
@@ -88,7 +88,7 @@ const SignInForm = () => {
               value={formData.password}
               onChange={handleChange}
               required
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+              className="mt-1 block w-full rounded-md border-2 border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 bg-gray-50 px-3 py-2"
             />
           </div>
           <button
