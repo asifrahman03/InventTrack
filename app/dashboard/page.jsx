@@ -3,10 +3,11 @@
 import { Box, Paper, Typography, Button, Modal, TextField, Grid } from "@mui/material";
 import Search from '../Search.js';
 import { useSearchParams } from 'next/navigation';
-import { firestore } from "@/firebase";
+import { auth, firestore } from "@/firebase";
 import { collection, query, getDocs, doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { SidebarDemo } from '../_components/SidebarM.jsx';
+import Link from 'next/link';
 
 const style = {
   position: 'absolute',
@@ -22,7 +23,6 @@ const style = {
   overflow: 'hidden',
 };
 
-
 export default function Home() {
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
@@ -31,13 +31,36 @@ export default function Home() {
   const [inventory, setInventory] = useState([]);
   const [newItemName, setNewItemName] = useState('');
 
-  const handleAddItem = async () => {
-    if (!firestore) return;
+  const user = auth.currentUser;
+  const userId = user ? user.uid : null;
+
+  useEffect(() => {
+    if (userId) {
+      updateInventory();
+    }
+  }, [userId]);
+
+  const updateInventory = async () => {
+    if (!firestore || !userId) return;
     try {
-      const docRef = doc(collection(firestore, 'inventory'), newItemName.toLowerCase());
+      const q = query(collection(firestore, `inventory-${userId}`));
+      const querySnapshot = await getDocs(q);
+      const items = querySnapshot.docs
+        .filter((doc) => doc.id !== 'initial')
+        .map((doc) => doc.data());
+      setInventory(items);
+    } catch (error) {
+      console.error("Error fetching inventory: ", error);
+    }
+  };
+
+  const handleAddItem = async () => {
+    if (!firestore || !userId) return;
+    try {
+      const docRef = doc(collection(firestore, `inventory-${userId}`), newItemName.toLowerCase());
       const docCheck = await getDoc(docRef);
-      if(docCheck.exists()){
-        const {count} = docCheck.data();
+      if (docCheck.exists()) {
+        const { count } = docCheck.data();
         await setDoc(docRef, {
           name: newItemName,
           count: count + 1
@@ -57,168 +80,181 @@ export default function Home() {
   };
 
   const handleRemoveItem = async (name) => {
-    if (!firestore) return;
-    try{
-      const docRef = doc(collection(firestore, 'inventory'), name.toLowerCase());
+    if (!firestore || !userId) return;
+    try {
+      const docRef = doc(collection(firestore, `inventory-${userId}`), name.toLowerCase());
       const docCheck = await getDoc(docRef);
-      if(docCheck.exists()){
-        const {count} = docCheck.data();
-        if(count === 1){
-          await deleteDoc(docRef)
-        }else{
-          await setDoc(docRef, {
-            name: name,
-            count: count-1
-          });
+      if (docCheck.exists()) {
+        const { count } = docCheck.data();
+        if (count > 1) {
+          await setDoc(docRef, { name, count: count - 1 });
+        } else {
+          await deleteDoc(docRef);
         }
-      } 
-      await updateInventory();
-    }catch(err){
-      console.error("Error removing document: ", err);
+        updateInventory();
+      }
+    } catch (error) {
+      console.error("Error removing document: ", error);
     }
-  }
-
-  const updateInventory = async () => {
-    if (!firestore) return;
-    const q = query(collection(firestore, 'inventory'));
-    const snapshot = await getDocs(q);
-    let inventoryList = [];
-    snapshot.forEach((doc) => {
-      inventoryList.push({ name: doc.id, ...doc.data() });
-    });
-  
-    const searchQuery = searchParams.get('query')?.toLowerCase();
-    if (searchQuery) {
-      inventoryList = inventoryList.filter(item => 
-        item.name.toLowerCase().includes(searchQuery)
-      );
-    }
-  
-    setInventory(inventoryList);
   };
 
-  useEffect(() => {
-    if (firestore) {
-      updateInventory();
-    }
-  }, [searchParams]);
-  return (
-    <SidebarDemo>
-    <Box sx={{background: 'linear-gradient(to right, #e6f0ff, #b3d9ff)', 
-      minHeight: '100vh', 
-      width: '100vw', 
-      padding: 4, 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center'}}>
-      <Typography variant="h2" textAlign="center" mb={4} color={'#4575f3'} fontWeight={"bold"}>InventTrack</Typography>
-      <Search />
-      {searchParams.get('query') && (<Typography variant="body2" sx={{ mb: 2 }}>
-        Showing results for: &quot;{searchParams.get('query')}&quot;
+  if (!userId) {
+    return (
+      <div className="min-h-screen bg-gradient-to-r from-blue-100 to-blue-300 flex flex-col items-center justify-center">
+        <Typography variant="h4" className="text-blue-900 mb-6">
+          Please sign in to view your inventory
         </Typography>
-      )}
-      <Grid container spacing={4} justifyContent="center" sx={{ maxWidth: '1200px', width: '100%' }}>
-        {/* Add Item Button Column */}
-        <Grid item xs={12} md={3} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
-          <Button 
-            variant="contained" 
-            onClick={handleOpen}
-            sx={{width: '200px', 
-              height: '50px',
+        <Link href="/sign-in" passHref>
+          <Button
+            variant="contained"
+            sx={{
               backgroundColor: '#4575f3',
               '&:hover': {
                 backgroundColor: '#3a63cc',
-              }}}  // Fixed size for the button
+              },
+              padding: '10px 20px',
+              fontSize: '1rem',
+            }}
           >
-            Add Item
+            Sign In
           </Button>
-        </Grid>
+        </Link>
+      </div>
+    );
+  }
 
-        {/* Inventory List Column */}
-        <Grid item xs={12} md={9}>
-          <Box sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-            maxHeight: "70vh",
-            overflowY: "auto",
-            border: '1px solid ',
-            borderRadius: '16px',
-            padding: 2,
-            backgroundColor: 'white'
-          }}>
-            {inventory.map((item) => (
-              <Paper 
-                key={item.name} 
-                elevation={2} 
-                variant='outlined' 
-                square={false} 
-                sx={{ 
-                  padding: 2, 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center' 
-                }}
+  // if (!userId) {
+  //   return (
+  //   <div className="min-h-screen bg-blue-100 flex items-center justify-center">
+  //     Please sign in to view your inventory.
+  //     <div className="mt-4 text-center">
+  //         <Link href="/sign-in" className="text-blue-600 hover:text-blue-800 transition duration-200">
+  //           <button className="w-full bg-gray-200 text-blue-600 py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-200">
+  //             Sign-in
+  //           </button>
+  //         </Link>
+  //       </div>
+  //   </div>
+  //   );
+  // }
+
+  return (
+        <SidebarDemo>
+        <Box sx={{background: 'linear-gradient(to right, #e6f0ff, #b3d9ff)', 
+          minHeight: '100vh', 
+          width: '100vw', 
+          padding: 4, 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center'}}>
+          <Typography variant="h2" textAlign="center" mb={4} color={'#4575f3'} fontWeight={"bold"}>InventTrack</Typography>
+          <Search />
+          {searchParams.get('query') && (<Typography variant="body2" sx={{ mb: 2 }}>
+            Showing results for: &quot;{searchParams.get('query')}&quot;
+            </Typography>
+          )}
+          <Grid container spacing={4} justifyContent="center" sx={{ maxWidth: '1200px', width: '100%' }}>
+            {/* Add Item Button Column */}
+            <Grid item xs={12} md={3} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
+              <Button 
+                variant="contained" 
+                onClick={handleOpen}
+                sx={{width: '200px', 
+                  height: '50px',
+                  backgroundColor: '#4575f3',
+                  '&:hover': {
+                    backgroundColor: '#3a63cc',
+                  }}}  // Fixed size for the button
               >
-                <Typography>
-                  {item.name ? item.name.charAt(0).toUpperCase() + item.name.slice(1) : 'No name'}
-                </Typography>
-                <Typography>
-                  Quantity: {item.count || 0}
-                </Typography>
-                <Button 
-                  variant="outlined" 
-                  onClick={() => handleRemoveItem(item.name)}
-                  size="small"
-                  sx={{
-                    border: '1px solid',
-                    '&:hover': {
-                      border: '1px solid',
-                    }
-                  }}
-                >
-                  Remove
-                </Button>
-              </Paper>
-            ))}
-          </Box>
-        </Grid>
-      </Grid>
-
-      <Modal 
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-        sx={{ '& .MuiBackdrop-root': { borderRadius: '16px' } }}
-      >
-        <Box sx={{
-          ...style,
-          borderRadius: '16px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 2,
-        }}>
-          <Typography id="modal-modal-title" variant="h6" component="h2">
-            Add Item to Inventory
-          </Typography>
-          <TextField
-            label="Item Name"
-            variant="outlined"
-            value={newItemName}
-            onChange={(e) => setNewItemName(e.target.value)}
-            fullWidth
-          />
-          <Button 
-            variant="contained" 
-            onClick={handleAddItem}
-            disabled={!newItemName.trim()}
+                Add Item
+              </Button>
+            </Grid>
+    
+            {/* Inventory List Column */}
+            <Grid item xs={12} md={9}>
+              <Box sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+                maxHeight: "70vh",
+                overflowY: "auto",
+                border: '1px solid ',
+                borderRadius: '16px',
+                padding: 2,
+                backgroundColor: 'white'
+              }}>
+                {inventory.map((item) => (
+                  <Paper 
+                    key={item.name} 
+                    elevation={2} 
+                    variant='outlined' 
+                    square={false} 
+                    sx={{ 
+                      padding: 2, 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center' 
+                    }}
+                  >
+                    <Typography>
+                      {item.name ? item.name.charAt(0).toUpperCase() + item.name.slice(1) : 'No name'}
+                    </Typography>
+                    <Typography>
+                      Quantity: {item.count || 0}
+                    </Typography>
+                    <Button 
+                      variant="outlined" 
+                      onClick={() => handleRemoveItem(item.name)}
+                      size="small"
+                      sx={{
+                        border: '1px solid',
+                        '&:hover': {
+                          border: '1px solid',
+                        }
+                      }}
+                    >
+                      Remove
+                    </Button>
+                  </Paper>
+                ))}
+              </Box>
+            </Grid>
+          </Grid>
+    
+          <Modal 
+            open={open}
+            onClose={handleClose}
+            aria-labelledby="modal-modal-title"
+            aria-describedby="modal-modal-description"
+            sx={{ '& .MuiBackdrop-root': { borderRadius: '16px' } }}
           >
-            Add Item
-          </Button>
+            <Box sx={{
+              ...style,
+              borderRadius: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+            }}>
+              <Typography id="modal-modal-title" variant="h6" component="h2">
+                Add Item to Inventory
+              </Typography>
+              <TextField
+                label="Item Name"
+                variant="outlined"
+                value={newItemName}
+                onChange={(e) => setNewItemName(e.target.value)}
+                fullWidth
+              />
+              <Button 
+                variant="contained" 
+                onClick={handleAddItem}
+                disabled={!newItemName.trim()}
+              >
+                Add Item
+              </Button>
+              </Box>
+            </Modal>
           </Box>
-        </Modal>
-      </Box>
-      </SidebarDemo>
-  );
+          </SidebarDemo>
+      );
 }
